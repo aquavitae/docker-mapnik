@@ -1,7 +1,7 @@
 const Express = require('express')
 const mapnik = require('mapnik');
 const bodyParser = require('body-parser');
-var morgan = require('morgan')
+const morgan = require('morgan')
 
 const app = new Express();
 
