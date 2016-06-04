@@ -1,0 +1,25 @@
+{
+  "name": "docker-mapnik",
+  "version": "1.0.0",
+  "description": "Mapnik as a service",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "forever index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aquavitae/docker-mapnik.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aquavitae/docker-mapnik/issues"
+  },
+  "homepage": "https://github.com/aquavitae/docker-mapnik#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "forever": "^0.15.2",
+    "mapnik": "^3.5.13"
+  }
+}
