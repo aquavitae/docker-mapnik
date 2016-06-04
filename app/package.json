@@ -18,10 +18,12 @@
   },
   "homepage": "https://github.com/aquavitae/docker-mapnik#readme",
   "dependencies": {
+    "bluebird": "^3.4.0",
     "body-parser": "^1.15.1",
     "express": "^4.13.4",
     "forever": "^0.15.2",
     "mapnik": "^3.5.13",
-    "morgan": "^1.7.0"
+    "morgan": "^1.7.0",
+    "request-promise": "^2.0.1",
   }
 }
