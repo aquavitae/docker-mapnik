@@ -1,12 +1,16 @@
 const Express = require('express')
 const mapnik = require('mapnik');
 const bodyParser = require('body-parser');
+var morgan = require('morgan')
 
 const app = new Express();
 
 // register fonts and datasource plugins
 mapnik.register_default_fonts();
 mapnik.register_default_input_plugins();
+
+// Configure request logging
+app.use(morgan('combined'));
 
 app.get('/health', (req, res) => {
   res.send('ok!');
