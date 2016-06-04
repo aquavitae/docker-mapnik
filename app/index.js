@@ -1,5 +1,6 @@
 const Express = require('express')
 const mapnik = require('mapnik');
+const bodyParser = require('body-parser');
 
 const app = new Express();
 
@@ -11,7 +12,7 @@ app.get('/health', (req, res) => {
   res.send('ok!');
 });
 
-app.post('/render', (req, res) => {
+app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   const map = new mapnik.Map(256, 256);
   const template = req.body;
   map.fromStringSync(template);
@@ -30,8 +31,6 @@ app.post('/render', (req, res) => {
       res.send(buffer);
     });
   });
-});
-
 });
 
 app.listen(3000, () => {
