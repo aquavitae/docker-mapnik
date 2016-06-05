@@ -24,6 +24,6 @@
     "forever": "^0.15.2",
     "mapnik": "^3.5.13",
     "morgan": "^1.7.0",
-    "request-promise": "^2.0.1",
+    "request-promise": "^2.0.1"
   }
 }

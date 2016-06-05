@@ -2,37 +2,51 @@ const Express = require('express')
 const mapnik = require('mapnik');
 const bodyParser = require('body-parser');
 const morgan = require('morgan')
+const Promise = require('bluebird');
+const request = require('request-promise');
 
 const app = new Express();
 
 // If defined, use WMS_URL to get a background image
 const wmsUrl = process.env.WMS_URL;
-const wmsLayers = provess.wnv.WMS_LAYERS;
-const wmsStyles = provess.wnv.WMS_STYLES;
+const wmsLayers = process.env.WMS_LAYERS;
+const wmsStyles = process.env.WMS_STYLES;
+const wmsSrs = process.env.WMS_SRS;
 
 // register fonts and datasource plugins
 mapnik.register_default_fonts();
 mapnik.register_default_input_plugins();
 
-function getWmsImage(map) {
-  const bbox = map.extend.join(',');
-  return request(`${wmsUrl}/GetMap`, {
-    qs: {
-      bbox: bbox,
-      format: 'image/png',
-      height: map.height,
-      layers: wmsLayers,
-      request: 'GetMap',
-      'srs(crs)': map.srs,
-      styles: wmsStyles,
-      version: 1.1,
-      width: map.width,
-    },
-  }).then(res => mapnik.Image.fromBufferSync(res.body));
+/**
+ * If WMS_URL is defined, fetch the specified background image.
+ * If not, return an empty image
+ */
+function getWmsImage(width, height, extent) {
+  if (wmsUrl) {
+    const bbox = extent.join(',');
+    return request(`${wmsUrl}/GetMap`, {
+      qs: {
+        bbox: bbox,
+        format: 'image/jpeg',
+        height: height,
+        layers: wmsLayers,
+        request: 'GetMap',
+        'srs(crs)': wmsSrs,
+        styles: wmsStyles,
+        version: 1.1,
+        width: width,
+      },
+      encoding: null
+    }).then(res => {
+      return mapnik.Image.fromBytesSync(res);
+    });
+  } else {
+    return Promise.resolve(new mapnik.Image(width, height));
+  }
 }
 
 // Configure request logging
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 
 app.get('/health', (req, res) => {
   res.send('ok!');
@@ -52,13 +66,20 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   // Create a new image using the map
   const image = new mapnik.Image(width, height);
   Promise.props({
-    wms: getWmsImage(map)
-    layers: Promise.promisify(map.render)(image),
+    wms: getWmsImage(width, height, map.extent),
+    layers: Promise.promisify(map.render, { context: map })(image),
   }).then(x => {
-    const image = x.wms.composite(x.layers);
-    return Promise.promisify(image.encode)('png');
-  }).then(
-    resolve(buffer);
+    // Make sure the images are premultiplied
+    if (!x.wms.premultiplied()) {
+      x.wms.premultiplySync();
+    }
+    if (!x.layers.premultiplied()) {
+      x.layers.premultiplySync();
+    }
+    return x;
+  }).then(x => Promise.promisify(x.wms.composite, { context: x.wms })(x.layers))
+    .then(image => Promise.promisify(image.encode, { context: image })('png'))
+    .then(buffer => {
     res.set('Content-Type', 'image/png');
     res.send(buffer);
   }).catch(err => {
