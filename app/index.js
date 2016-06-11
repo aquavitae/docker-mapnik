@@ -7,12 +7,6 @@ const request = require('request-promise');
 
 const app = new Express();
 
-// If defined, use WMS_URL to get a background image
-const wmsUrl = process.env.WMS_URL;
-const wmsLayers = process.env.WMS_LAYERS;
-const wmsStyles = process.env.WMS_STYLES;
-const wmsSrs = process.env.WMS_SRS;
-
 // register fonts and datasource plugins
 mapnik.register_default_fonts();
 mapnik.register_default_input_plugins();
@@ -21,18 +15,18 @@ mapnik.register_default_input_plugins();
  * If WMS_URL is defined, fetch the specified background image.
  * If not, return an empty image
  */
-function getWmsImage(width, height, extent) {
-  if (wmsUrl) {
+function getWmsImage(wms, width, height, extent) {
+  if (wms.url) {
     const bbox = extent.join(',');
-    return request(`${wmsUrl}/GetMap`, {
+    return request(`${wms.url}/GetMap`, {
       qs: {
         bbox: bbox,
         format: 'image/jpeg',
         height: height,
-        layers: wmsLayers,
+        layers: wms.layers,
         request: 'GetMap',
-        'srs(crs)': wmsSrs,
-        styles: wmsStyles,
+        'srs(crs)': wms.srs,
+        styles: wms.styles,
         version: 1.1,
         width: width,
       },
@@ -53,6 +47,13 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
+  const wms = {
+    url: req.query.wmsUrl,
+    layers: req.query.wmsLayers,
+    styles: req.query.wmsStyles,
+    srs: req.query.wmsSrs,
+  };
+
   // Get width and height from query parameters
   const width = req.query.width || 200;
   const height = req.query.height || 200;
@@ -66,7 +67,7 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   // Create a new image using the map
   const image = new mapnik.Image(width, height);
   Promise.props({
-    wms: getWmsImage(width, height, map.extent),
+    wms: getWmsImage(wms, width, height, map.extent),
     layers: Promise.promisify(map.render, { context: map })(image),
   }).then(x => {
     // Make sure the images are premultiplied
