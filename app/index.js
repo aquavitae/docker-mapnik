@@ -21,11 +21,11 @@ function getWmsImage(wms, width, height, extent) {
     return request(`${wms.url}/GetMap`, {
       qs: {
         bbox: bbox,
-        format: 'image/jpeg',
+        format: 'image/png',
         height: height,
         layers: wms.layers,
         request: 'GetMap',
-        'srs(crs)': wms.srs,
+        srs: wms.srs,
         styles: wms.styles,
         version: 1.1,
         width: width,
