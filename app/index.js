@@ -55,8 +55,8 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   };
 
   // Get width and height from query parameters
-  const width = req.query.width || 200;
-  const height = req.query.height || 200;
+  const width = parseFloat(req.query.width) || 200;
+  const height = parseFloat(req.query.height) || 200;
 
   // Load the template from the request body and create a map
   const template = req.body;
