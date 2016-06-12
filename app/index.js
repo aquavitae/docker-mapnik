@@ -88,6 +88,25 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   });
 });
 
+app.get('*', (req, res) => {
+  const html = `
+    <h1>Render map</h1>
+    <p><code>POST</code> to <code>\\render</code> with the following
+    querystring parameters:
+    <dl>
+      <dt>height</dt><dd>Height of the generated image in pixels (default 200)</dd>
+      <dt>width</dt><dd>Width of the generated image in pixels (default 200)</dd>
+      <dt>wmsUrl</dt><dd>URL to a WMS service from which to obtain a background image</dd>
+      <dt>wmsLayers</dt><dd>Layer in the WMS</dd>
+      <dt>wmsStyles</dt><dd>Style in the WMS</dd>
+      <dt>wmsSrs</dt><dd>SRS of the WMS. This should match the SRS of the data posted</dd>
+    </dl>
+    The body of the post should be an XML document (type <code>text\\xml</code>)
+    representing the mapnik stylesheet.
+  `;
+  res.send(html);
+});
+
 app.listen(3000, () => {
   console.log('Listening on port 3000');
 });
