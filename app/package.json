@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "forever index.js"
+    "serve": "forever index.js",
+    "start": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -22,8 +23,11 @@
     "body-parser": "^1.15.1",
     "express": "^4.13.4",
     "forever": "^0.15.2",
-    "mapnik": "^3.5.13",
+    "mapnik": "~3.5.13",
     "morgan": "^1.7.0",
     "request-promise": "^2.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.9.2"
   }
 }
