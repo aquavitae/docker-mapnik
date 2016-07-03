@@ -8,7 +8,7 @@ const request = require('request-promise');
 const app = new Express();
 
 // register fonts and datasource plugins
-mapnik.register_default_fonts();
+mapnik.register_system_fonts();
 mapnik.register_default_input_plugins();
 
 function zoomBbox(bbox, factor) {
