@@ -11,6 +11,23 @@ const app = new Express();
 mapnik.register_default_fonts();
 mapnik.register_default_input_plugins();
 
+function zoomBbox(bbox, factor) {
+  const currentXDistance = (bbox[2] - bbox[0]);
+  const currentYDistance = (bbox[3] - bbox[1]);
+  const newXDistance = currentXDistance * factor;
+  const newYDistance = currentYDistance * factor;
+  const xChange = newXDistance - currentXDistance;
+  const yChange = newYDistance - currentYDistance;
+
+  const lowX = bbox[0] - (xChange / 2);
+  const lowY = bbox[1] - (yChange / 2);
+  const highX = (xChange / 2) + bbox[2];
+  const highY = (yChange / 2) + bbox[3];
+
+  const sized = [lowX, lowY, highX, highY];
+  return sized;
+};
+
 /**
  * If WMS_URL is defined, fetch the specified background image.
  * If not, return an empty image
@@ -54,6 +71,8 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
     srs: req.query.wmsSrs,
   };
 
+  const zoomFactor = req.query.zoomFactor || 1.2;
+
   // Get width and height from query parameters
   const width = parseFloat(req.query.width) || 200;
   const height = parseFloat(req.query.height) || 200;
@@ -63,6 +82,9 @@ app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
   const map = new mapnik.Map(width, height);
   map.fromStringSync(template);
   map.zoomAll();
+
+  // Zoom out 20 by a factor
+  map.zoomToBox(zoomBbox(map.extent, zoomFactor));
 
   // Create a new image using the map
   const image = new mapnik.Image(width, height);
