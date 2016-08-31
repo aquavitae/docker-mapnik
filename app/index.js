@@ -63,7 +63,10 @@ app.get('/health', (req, res) => {
   res.send('ok!');
 });
 
-app.post('/render', bodyParser.text({ type: 'text/xml' }), (req, res) => {
+app.post('/render', bodyParser.text({ 
+  type: 'text/xml',
+  limit: '10mb',
+}), (req, res) => {
   const wms = {
     url: req.query.wmsUrl,
     layers: req.query.wmsLayers,
