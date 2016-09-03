@@ -50,8 +50,19 @@ function getWmsImage(wms, width, height, extent) {
     console.log(qs);
     return request(`${wms.url}/GetMap`, {
       qs,
+      timeout: 60000,
       encoding: null
-    }).then(res => {
+    })
+    .catch(error => {
+      console.error('Upstream error')
+      console.error(error);
+      return Promise.reject({
+        status: 502,
+        message: 'Problem with WMS',
+        error,
+      });
+    })
+    .then(res => {
       return mapnik.Image.fromBytesSync(res);
     });
   } else {
@@ -66,7 +77,7 @@ app.get('/health', (req, res) => {
   res.send('ok!');
 });
 
-app.post('/render', bodyParser.text({ 
+app.post('/render', bodyParser.text({
   type: 'text/xml',
   limit: '10mb',
 }), (req, res) => {
@@ -94,26 +105,30 @@ app.post('/render', bodyParser.text({
 
   // Create a new image using the map
   const image = new mapnik.Image(width, height);
-  Promise.props({
-    wms: getWmsImage(wms, width, height, map.extent),
-    layers: Promise.promisify(map.render, { context: map })(image),
-  }).then(x => {
-    // Make sure the images are premultiplied
-    if (!x.wms.premultiplied()) {
-      x.wms.premultiplySync();
-    }
-    if (!x.layers.premultiplied()) {
-      x.layers.premultiplySync();
-    }
-    return x;
-  }).then(x => Promise.promisify(x.wms.composite, { context: x.wms })(x.layers))
+  Promise
+    .props({
+      wms: getWmsImage(wms, width, height, map.extent),
+      layers: Promise.promisify(map.render, { context: map })(image),
+    })
+    .then(x => {
+      // Make sure the images are premultiplied
+      if (!x.wms.premultiplied()) {
+        x.wms.premultiplySync();
+      }
+      if (!x.layers.premultiplied()) {
+        x.layers.premultiplySync();
+      }
+      return x;
+    })
+    .then(x => Promise.promisify(x.wms.composite, { context: x.wms })(x.layers))
     .then(image => Promise.promisify(image.encode, { context: image })('png'))
     .then(buffer => {
-    res.set('Content-Type', 'image/png');
-    res.send(buffer);
-  }).catch(err => {
-    throw err
-  });
+      res.set('Content-Type', 'image/png');
+      res.send(buffer);
+    }).catch(err => {
+      const status = err.status || 500;
+      res.status(status).json(err);
+    });
 });
 
 app.get('*', (req, res) => {
