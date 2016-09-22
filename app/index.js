@@ -35,18 +35,21 @@ function zoomBbox(bbox, factor) {
 function getWmsImage(wms, width, height, extent) {
   if (wms.url) {
     const bbox = extent.join(',');
+    const qs = {
+      bbox: bbox,
+      format: 'image/png',
+      height: height,
+      layers: wms.layers,
+      request: 'GetMap',
+      srs: wms.srs,
+      styles: wms.styles,
+      version: 1.1,
+      width: width,
+    };
+    console.log(`WMS request: ${wms.url}/GetMap`);
+    console.log(qs);
     return request(`${wms.url}/GetMap`, {
-      qs: {
-        bbox: bbox,
-        format: 'image/png',
-        height: height,
-        layers: wms.layers,
-        request: 'GetMap',
-        srs: wms.srs,
-        styles: wms.styles,
-        version: 1.1,
-        width: width,
-      },
+      qs,
       encoding: null
     }).then(res => {
       return mapnik.Image.fromBytesSync(res);
