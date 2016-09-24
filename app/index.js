@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan')
 const Promise = require('bluebird');
 const request = require('request-promise');
+const querystring = require('querystring');
 
 const app = new Express();
 
@@ -46,8 +47,7 @@ function getWmsImage(wms, width, height, extent) {
       version: 1.1,
       width: width,
     };
-    console.log(`WMS request: ${wms.url}/GetMap`);
-    console.log(qs);
+    console.log(`WMS request: ${wms.url}/GetMap?${querystring.stringify(qs)}`);
     return request(`${wms.url}/GetMap`, {
       qs,
       timeout: 60000,
